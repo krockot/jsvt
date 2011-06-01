@@ -578,8 +578,28 @@ jsvt.Terminal.prototype.ApplyDECReset = function(n) {
 }
 
 jsvt.Terminal.prototype.InputString = function(e) {
-	if(e.ctrl && e.key >= 65 && e.key <= 90) {
-		return String.fromCharCode(e.key - 64);
+	if(e.ctrl) {
+		if(e.key >= 65 && e.key <= 90) {
+			return String.fromCharCode(e.key - 64);
+		}
+		switch(e.key) {
+			case $.Keys.Key2:
+				return "\x00";
+			case $.Keys.Key3:
+			case $.Keys.LeftBracket:
+				return "\x1b";
+			case $.Keys.Key4:
+				return "\x1c";
+			case $.Keys.KeyRightBracket:
+			case $.Keys.Key5:
+				return "\x1d";
+			case $.Keys.Key6:
+				return "\x1e";
+			case $.Keys.Key7:
+				return "\x1f";
+			case $.Keys.Key8:
+				return "\x7f";
+		}
 	}
 
 	switch(e.key) {
@@ -619,6 +639,30 @@ jsvt.Terminal.prototype.InputString = function(e) {
 			return "\x0d";
 		case $.Keys.Space:
 			return " ";
+		case $.Keys.F1:
+			return "\x1b[11~";
+		case $.Keys.F2:
+			return "\x1b[12~";
+		case $.Keys.F3:
+			return "\x1b[13~";
+		case $.Keys.F4:
+			return "\x1b[14~";
+		case $.Keys.F5:
+			return "\x1b[15~";
+		case $.Keys.F6:
+			return "\x1b[17~";
+		case $.Keys.F7:
+			return "\x1b[18~";
+		case $.Keys.F8:
+			return "\x1b[19~";
+		case $.Keys.F9:
+			return "\x1b[20~";
+		case $.Keys.F10:
+			return "\x1b[21~";
+		case $.Keys.F11:
+			return "\x1b[23~";
+		case $.Keys.F12:
+			return "\x1b[24~";
 	}
 
 	return e.chr;
