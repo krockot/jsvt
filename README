@@ -1,0 +1,30 @@
+Simple javascript VT100 (subset) emulator.
+
+Instantiate a new jsvt.Terminal() object and embed its .display property (a DOM object)
+somewhere in your document.
+
+Calling .Write(str) on the terminal will of course write to the display.
+
+A substantial subset of ANSI control sequences are supported, including:
+
+- SGR character attributes
+- Switching between application and normal input modes
+- Switching to an alternate screen buffer
+- Cursor positioning
+- Scroll regions
+- Other commonly used terminal manipulation sequences
+
+Also provided is an input translation mechanism that depends on jquery.keyboard.
+This allows various control keypresses to be translated into appropriate input
+sequences before being sent to e.g. a remote terminal device.
+
+Simply call .InputString(e) where e is a jquery.keyboard event.  The appropriate
+ANSI string to send will be returned.
+
+Visual bell is also supported.  If the bell character ('\a' or '\x07') is written
+to the terminal via Write(), the display element will invert for 200 milliseconds.
+
+This implementation is sloooooooow and messy.  And quite functional.
+
+A work in progress.
+

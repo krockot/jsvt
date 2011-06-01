@@ -1,0 +1,17 @@
+<html>
+	<head>
+		<script type='text/javascript' src='jquery.js'></script>
+		<script type='text/javascript' src='jsvt.js'></script>
+		<script type='text/javascript'>
+			$(document).ready(function() {
+				term = new jsvt.Terminal();
+				term.Write("Oh look\n");
+				term.Write("It's a \x1b[1;34mTERMINAL!\x1b[0m\n");
+				term.Write("   How nice.");
+				$("body").append(term.display);
+			});
+		</script>
+	</head>
+	<body>
+	</body>
+</html>
