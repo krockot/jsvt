@@ -245,7 +245,7 @@ jsvt.Terminal.prototype.WriteCharacter = function(c) {
 }
 
 jsvt.Terminal.prototype.UpdateDisplay = function() {
-	var attr = {background: jsvt.TerminalColors[0], color: jsvt.TerminalColors[7]};
+	var attr;
 	for(var i = 0; i < this.rows; ++i) {
 		var line = this.buffer.lines[i];
 		for(var j = 0; j < this.cols; ++j) {
@@ -261,13 +261,21 @@ jsvt.Terminal.prototype.UpdateDisplay = function() {
 				attr = {background: bgColor, color: fgColor};
 				chr = cell.chr;
 			}
+			else {
+				attr = {
+					background: jsvt.TerminalColors[this.inVisualBell ? 7 : 0]
+				};
+			}
 
 			this.screen[i][j].css(attr).text(chr);
 		}
 	}
 
 	var cur = this.buffer.cursor;
-	this.screen[cur.y][cur.x].css({background: jsvt.TerminalColors[10], color: jsvt.TerminalColors[0]});
+	this.screen[cur.y][cur.x].css({
+		background: jsvt.TerminalColors[10],
+		color: jsvt.TerminalColors[0]}
+	);
 }
 
 // Set a handler to receive title change events that occur via the OSC sequence.
