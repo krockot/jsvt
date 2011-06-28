@@ -30,30 +30,15 @@ jsvt.TerminalColors = [
 
 jsvt.Terminal = function()
 {
-	this.rows = 25;
-	this.cols = 80;
+	this.rows = 0;
+	this.cols = 0;
 	this.scrollBufferLines = 1000;
 	this.title = "jsvt";
 	this.titleHandler = function(title) {}
 
 	this.display = $("<div/>").css("display", "inline-block");
 	
-	var cellT = $("<pre/>")
-		.css("background", jsvt.TerminalColors[0])
-		.css("color", jsvt.TerminalColors[7])
-		.css("font-family", "DejaVu Sans Mono, Bitstream Vera Sans Mono, monospace")
-		.css("font-size", "10pt")
-		.css("display", "inline")
-		.text(" ");
-	
 	this.screen = [];
-	for(var j = 0; j < this.rows; ++j) {
-		this.screen.push([]);
-		for(var i = 0; i < this.cols; ++i) {
-			this.screen[j].push(cellT.clone().appendTo(this.display));
-		}
-		this.display.append($("<br/>"));
-	}
 	
 	this.showCursor = true;
 	this.applicationKeyMode = false;
@@ -84,7 +69,24 @@ jsvt.Terminal = function()
 
 	this.normalBuffer = NewBuffer();
 	this.altBuffer = NewBuffer();
+
+	this.resizeBuffer = function(buffer, w, h) {
+	    var lines = buffer.lines;
+	    buffer.lines = [];
+	    for(var j = 0; j < h; ++j) {
+			var line = [];
+			var oldLine = (j in lines) ? lines[j] : [];
+			buffer.lines.push(line);
+			for(var i = 0; i < w; ++i) {
+				if(i in oldLine)
+				    line.push(oldLine[i]);
+			}
+		}
+	}
+
 	this.buffer = this.normalBuffer;
+
+	this.Resize(80, 25);
 	
 	this.writeBuffer = "";
 	this.inVisualBell = false;
@@ -99,6 +101,37 @@ jsvt.Terminal = function()
 	// regexp   =  ESC   [(A)?    (...)?    (T)
 	this.exprCSI = /^\x1b\[([?>!])?([0-9;]*)?([@A-Za-z`])/;
 
+	this.UpdateDisplay();
+
+	this.forceRedraw = false;
+}
+
+jsvt.Terminal.prototype.Resize = function(w, h) {
+    var cellT = $("<pre/>")
+		.css("background", jsvt.TerminalColors[0])
+		.css("color", jsvt.TerminalColors[7])
+		.css("font-family", "DejaVu Sans Mono, Bitstream Vera Sans Mono, monospace")
+		.css("font-size", "10pt")
+		.css("display", "inline")
+		.text(" ");
+
+	this.display.empty();
+	this.screen = [];
+    for(var j = 0; j < h; ++j) {
+		this.screen.push([]);
+		for(var i = 0; i < w; ++i) {
+		    this.screen[j].push(cellT.clone().appendTo(this.display));
+		}
+		this.display.append($("<br/>"));
+    }
+
+	this.resizeBuffer(this.normalBuffer, w, h);
+	this.resizeBuffer(this.altBuffer, w, h);
+
+    this.rows = h;
+    this.cols = w;
+
+	this.forceRedraw = true;
 	this.UpdateDisplay();
 }
 
@@ -245,12 +278,24 @@ jsvt.Terminal.prototype.WriteCharacter = function(c) {
 }
 
 jsvt.Terminal.prototype.UpdateDisplay = function() {
-	var attr;
+	if(this.forceRedraw || typeof(this.oldScreen) == 'undefined' || this.oldScreen.length != this.rows || this.oldScreen[0].length != this.cols) {
+	    this.oldScreen = [];
+	    for(var i = 0; i < this.rows; ++i) {
+		var row = [];
+		this.oldScreen.push(row);
+		for(var j = 0; j < this.cols; ++j) {
+		    row.push({attr: {}, chr: null});
+		   }
+		}
+		this.forceRedraw = false;
+	}
+
 	for(var i = 0; i < this.rows; ++i) {
 		var line = this.buffer.lines[i];
 		for(var j = 0; j < this.cols; ++j) {
 			var cell = line[j];
 			var chr = " ";
+			var attr;
 			if(typeof(cell) != 'undefined') {
 				var inverse = cell.attr.inverse ^ this.inVisualBell;
 				var bold = cell.attr.bold || cell.attr.blink;
@@ -267,15 +312,23 @@ jsvt.Terminal.prototype.UpdateDisplay = function() {
 				};
 			}
 
-			this.screen[i][j].css(attr).text(chr);
+			if(	this.oldScreen[i][j].attr.background != attr.background ||
+				this.oldScreen[i][j].attr.color != attr.color ||
+				this.oldScreen[i][j].chr != chr)
+			{
+			    	this.screen[i][j].css(attr).text(chr);
+			}
+			this.oldScreen[i][j].attr = attr;
+			this.oldScreen[i][j].chr = chr;
 		}
 	}
-
 	var cur = this.buffer.cursor;
-	this.screen[cur.y][cur.x].css({
+	var curAttr = {
 		background: jsvt.TerminalColors[10],
-		color: jsvt.TerminalColors[0]}
-	);
+		color: jsvt.TerminalColors[0]
+	};
+	this.screen[cur.y][cur.x].css(curAttr);
+	this.oldScreen[cur.y][cur.x].attr = curAttr;
 }
 
 // Set a handler to receive title change events that occur via the OSC sequence.
